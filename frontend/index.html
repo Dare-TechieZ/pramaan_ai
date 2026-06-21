@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraWeave Studio | GenAI Luxury Fashion Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        peach: { 50: '#fff5f0', 100: '#ffe6d9', 200: '#fccbb3' },
+                        brandOrange: '#f95716',
+                        brandYellow: '#ffc107'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-peach-50 text-slate-800 min-h-screen flex flex-col font-sans selection:bg-orange-200">
+
+    <header class="bg-white border-b border-peach-100 shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 class="text-2xl font-extrabold bg-gradient-to-r from-brandOrange via-orange-500 to-brandYellow bg-clip-text text-transparent tracking-tight">
+                Pramaan <span class="text-xs tracking-widest font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 uppercase">Studio Engine</span>
+            </h1>
+            <nav class="flex gap-6 text-sm font-semibold text-slate-600">
+             
+                <a href="#shopping" class="hover:text-brandOrange transition-colors">Mood Shopping</a>
+                <a href="#dream" class="hover:text-brandOrange transition-colors">Dream Generator</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl mx-auto w-full px-6 py-10 space-y-16">
+
+        
+        <section id="shopping" class="bg-white rounded-3xl p-8 shadow-sm border border-peach-100 space-y-8">
+            <div class="space-y-1">
+                <span class="text-xs font-bold uppercase tracking-widest text-amber-500">Cognitive Search Core</span>
+                <h2 class="text-2xl font-black text-slate-900">Contextual & Emotional Prompt Shopping</h2>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3 max-w-3xl">
+                <input id="shopPrompt" type="text" class="flex-1 px-5 py-4 border border-peach-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm bg-stone-50" placeholder="Type here: e.g., 'give me something elegant, royal, and suitable for Durga Puja'">
+                <button onclick="executeSemanticSearch()" class="px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-sm transition-all shadow-md">
+                    Evaluate Intent Catalog
+                </button>
+            </div>
+            <div id="shopResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2"></div>
+        </section>
+
+        <section id="dream" class="bg-white rounded-3xl p-8 shadow-sm border border-peach-100 grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-5 space-y-6">
+                <div class="space-y-1">
+                    <span class="text-xs font-bold uppercase tracking-widest text-brandYellow bg-yellow-50 text-yellow-600 px-2 py-0.5 rounded border border-yellow-200">FLUX.1 Powered</span>
+                    <h2 class="text-2xl font-black text-slate-900">Dream Cross-Culture Outfit Fusion</h2>
+                </div>
+                <div class="space-y-4">
+                    <textarea id="dreamPrompt" rows="4" class="w-full px-4 py-3 border border-peach-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm bg-stone-50" placeholder="Type structural request here... e.g., Mix heavy luxury Pakistani embroidery detailing with elegant clean tailored minimalist Korean Aesthetics."></textarea>
+                    <button onclick="executeDreamDesign()" class="w-full py-4 bg-gradient-to-r from-amber-50 to-brandYellow hover:bg-yellow-500 text-slate-900 font-bold rounded-xl shadow-lg transition-all text-sm transform active:scale-[0.98]">
+                        Synthesize Concept Blueprint
+                    </button>
+                </div>
+            </div>
+            <div class="lg:col-span-7 flex flex-col items-center justify-center bg-gradient-to-tr from-amber-50/20 to-orange-50/30 rounded-2xl border border-dashed border-peach-200 p-6 min-h-[400px]">
+                <div id="dreamLoading" class="hidden flex flex-col items-center gap-3 text-amber-600 font-bold text-sm tracking-wide">
+                    <div class="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                    Drafting cross-cultural apparel matrix blueprints...
+                </div>
+                <img id="dreamResult" class="max-h-[450px] rounded-xl shadow-md hidden object-contain bg-white" src="" alt="Dream Apparel Render">
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Use local server block first. You will swap this string when migrating live to Render.
+        const BASE_URL = "http://127.0.0.1:8000/api";
+
+        async function executeTryOn() {
+    const personInput = document.getElementById('tryonPerson');
+    const garmentInput = document.getElementById('tryonGarment');
+    const loadingDiv = document.getElementById('tryonLoading');
+    const resultImg = document.getElementById('tryonResult');
+
+    // 1. Check if the user actually uploaded files
+    if (!personInput.files[0] || !garmentInput.files[0]) {
+        alert("Please upload both your photo and a kurti design image first!");
+        return;
+    }
+
+    // Show loading spinner, hide previous result
+    loadingDiv.classList.remove('hidden');
+    resultImg.classList.add('hidden');
+
+    // 2. Pack files into Multipart FormData matching your updated Python backend
+    const formData = new FormData();
+    formData.append('person_image', personInput.files[0]);
+    formData.append('garment_image', garmentInput.files[0]);
+
+    try {
+        const response = await fetch('http://localhost:8000/api/advanced-tryon', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) throw new Error("Backend processing failed");
+
+        const data = await response.json();
+        
+        if (data.success) {
+            // Display the newly returned composite layout!
+            resultImg.src = data.image_url;
+            resultImg.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error("Pipeline Error:", error);
+        alert("Something went wrong compiling your visualization.");
+    } finally {
+        // Always hide spinner when finished
+        loadingDiv.classList.add('hidden');
+    }
+}
+        async function executeSemanticSearch() {
+            const container = document.getElementById('shopResults');
+            container.innerHTML = `<div class="col-span-full text-center text-amber-600 font-bold py-8 animate-pulse text-sm">Evaluating catalog vectors...</div>`;
+
+            try {
+                const response = await fetch(`${BASE_URL}/prompt-search`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ prompt: document.getElementById('shopPrompt').value })
+                });
+                const data = await response.json();
+                container.innerHTML = '';
+                
+                if(data.success && data.recommendations.length > 0) {
+                    data.recommendations.forEach(item => {
+                        container.innerHTML += `
+                            <div class="border border-peach-100 rounded-2xl p-4 bg-white shadow-sm hover:shadow-md transition-all duration-300">
+                                <div class="overflow-hidden rounded-xl bg-slate-100 mb-4 h-64">
+                                    <img src="${item.image}" class="w-full h-full object-cover">
+                                </div>
+                                <h3 class="font-black text-slate-800 text-base">${item.name}</h3>
+                                <div class="flex flex-wrap gap-1.5 mt-3">
+                                    ${item.tags.map(t => `<span class="bg-orange-50 text-brandOrange text-xs font-bold px-3 py-1 rounded-full">#${t}</span>`).join('')}
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function executeDreamDesign() {
+            const loading = document.getElementById('dreamLoading');
+            const resultImg = document.getElementById('dreamResult');
+            loading.classList.remove('hidden');
+            resultImg.classList.add('hidden');
+
+            try {
+                const response = await fetch(`${BASE_URL}/dream-outfit`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ prompt: document.getElementById('dreamPrompt').value })
+                });
+                const data = await response.json();
+                if(data.success && data.image_url) {
+                    resultImg.src = data.image_url;
+                    resultImg.classList.remove('hidden');
+                } else { alert("Generative generation failed."); }
+            } catch(e) { console.error(e); }
+            loading.classList.add('hidden');
+        }
+
+        window.onload = executeSemanticSearch;
+    </script>
+</body>
+</html>
